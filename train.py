@@ -12,6 +12,7 @@ import torch.backends.cudnn as cudnn
 from model.model import *
 from torch.utils import data
 import torchvision.transforms as transforms
+from ray import tune
 
 parser = argparse.ArgumentParser(description='PyTorch State Discriminator training scripts')
 parser.add_argument('arch', metavar='ARCH', default='target', type=str, choices=['target', 'neighbor'],
