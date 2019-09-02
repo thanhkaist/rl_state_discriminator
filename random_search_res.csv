@@ -1,0 +1,15 @@
+21,"{'lr': 0.0001, 'drop_out': 0.6, 'norm': 'l2', 'batch_size': 32}",0
+58,"{'lr': 0.001, 'drop_out': 0.6, 'norm': 'l2', 'batch_size': 32}",1
+50,"{'lr': 0.0001, 'drop_out': 0.6, 'norm': 'l2', 'batch_size': 32}",2
+====,2019-09-02 21:38:28,====
+86,"{'drop_out': 0.6, 'norm': 'l2', 'batch_size': 32, 'lr': 0.0001}",0
+81,"{'drop_out': 0.6, 'norm': 'l2', 'batch_size': 32, 'lr': 0.0001}",1
+60,"{'drop_out': 0.6, 'norm': 'l2', 'batch_size': 32, 'lr': 0.0001}",2
+87,"{'drop_out': 0.6, 'norm': 'l2', 'batch_size': 32, 'lr': 0.0001}",3
+34,"{'drop_out': 0.6, 'norm': 'l2', 'batch_size': 32, 'lr': 0.0001}",4
+====,2019-09-02 21:38:41,====
+23,"{'lr': 0.001, 'batch_size': 32, 'drop_out': 0.6, 'norm': 'l2'}",0
+26,"{'lr': 0.0001, 'batch_size': 32, 'drop_out': 0.6, 'norm': 'l2'}",1
+11,"{'lr': 0.0001, 'batch_size': 32, 'drop_out': 0.6, 'norm': 'l2'}",2
+74,"{'lr': 0.0001, 'batch_size': 32, 'drop_out': 0.6, 'norm': 'l2'}",3
+28,"{'lr': 0.001, 'batch_size': 32, 'drop_out': 0.6, 'norm': 'l2'}",4

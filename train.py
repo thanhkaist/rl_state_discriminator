@@ -4,6 +4,8 @@ import shutil
 import time
 import random
 import numpy as np
+from numpy.random import choice
+
 
 import torch
 import torch.nn
