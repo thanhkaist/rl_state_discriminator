@@ -1,5 +1,7 @@
 checkpoints
 *.npz
+*.csv
+*.mp4
 Data
 logs
 deep_learning_tutorials

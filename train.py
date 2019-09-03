@@ -14,7 +14,6 @@ import torch.backends.cudnn as cudnn
 from model.model import *
 from torch.utils import data
 import torchvision.transforms as transforms
-from ray import tune
 
 parser = argparse.ArgumentParser(description='PyTorch State Discriminator training scripts')
 parser.add_argument('arch', metavar='ARCH', default='target', type=str, choices=['target', 'neighbor'],
@@ -65,11 +64,25 @@ class DataSet(data.Dataset):
     def read_from_npz(self, filepath, n):
         data = np.load(filepath)
         if self.arch == 'target':
-            imgs = data['pair_goal']
             labels = data['labels']
+
+            try:
+                imgs = data['pair_goal']
+            except:
+                print("load imgs from 'data' key")
+                imgs = data['data']
+
         elif self.arch == 'neighbor':
-            imgs = data['pair_obs_arr']
             labels = data['labels']
+            try:
+                imgs = data['pair_obs_arr']
+            except:
+                print("load imgs from 'data' key")
+                imgs = data['data']
+        else:
+            raise Exception("Architecture is not supported")
+
+
         assert self.begin + self.len <= imgs.shape[0]
         img1s = imgs[self.begin:self.begin + n, 0]
         img2s = imgs[self.begin:self.begin + n, 1]
