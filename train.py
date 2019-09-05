@@ -98,6 +98,9 @@ class DataSet(data.Dataset):
         img2 = self.img2s[index]
         labels = self.labels[index]
         labels = labels.astype(np.int)
+        labels = np.squeeze(labels)
+        img1 = img2.astype(np.float32)
+        img2 = img2.astype(np.float32)
         if self.transform is not None:
             img1 = self.transform(img1)
             img2 = self.transform(img2)
@@ -124,6 +127,7 @@ def main():
     print("args", args)
     # test data set
     # test_dataset(args.data,500)
+    # exit(0)
     best_prec1 = 0
 
     # init ramdom seed 
@@ -139,6 +143,9 @@ def main():
         model = neighbor_model()
     else:
         raise Exception('The the model args.arch is not define')
+
+    # init weight for model
+    model.init_weight()
 
     # define loss function 
     criterion = nn.CrossEntropyLoss().cuda()
@@ -210,7 +217,7 @@ def main():
         return
 
     for epoch in range(args.start_epoch, args.epochs):
-        adjust_learning_rate(args.lr, optimizer, epoch)
+        # adjust_learning_rate(args.lr, optimizer, epoch)
 
         # train for one epoch
         train(train_loader, model, criterion, optimizer, epoch, args.echo_freq)
@@ -227,6 +234,29 @@ def main():
                          'best_prec1': best_prec1,
                          'optimizer': optimizer.state_dict(),
                          }, is_best, args.prefix)
+
+
+def load_model(model,optimizer,check_point_path):
+    start_epoch = None
+    best_prec1 = None
+
+    if os.path.isfile(check_point_path):
+        print("=>Loading checkpoint '{}'".format(check_point_path))
+        checkpoint = torch.load(check_point_path)
+        start_epoch = checkpoint['epoch']
+        best_prec1 = checkpoint['best_prec1']
+
+        model.load_state_dict(checkpoint['state_dict'])
+        print('*Loaded model sucessesful')
+        if 'optimizer' in checkpoint:
+            optimizer.load_state_dict(checkpoint['optimizer'])
+            print('*Loaded optimizer sucessesful')
+
+        print("=> loaded checkpoint '{}' (epoch {})".format(check_point_path, checkpoint['epoch']))
+    else:
+        print("=> no checkpoint found at '{}'".format(check_point_path))
+
+    return start_epoch, best_prec1
 
 
 def save_checkpoint(state, is_best, prefix):

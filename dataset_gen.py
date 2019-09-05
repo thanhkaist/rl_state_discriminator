@@ -56,13 +56,16 @@ def load_data_from_npz(filepath):
     return data, labels
 
 
-def visualize_data(data,label,num =4, offset = 0):
+def visualize_data(data,label,num =4, offset = 0, zoom = False):
     rows  = num
     cols  = 2
     for i in range(rows*cols):
         j = offset + i // 2
         plt.subplot(rows,cols,i+1,xlabel = str(label[j]))
-        plt.imshow(data[j][i%2].astype(int))
+        im = Image.fromarray(np.uint8(data[j][i % 2]))
+        if zoom:
+            im = im.resize((WIDTH*2,HEIGHT*2))
+        plt.imshow(im)
     plt.show()
 
 if __name__ == '__main__':
@@ -75,6 +78,7 @@ if __name__ == '__main__':
     parser.add_argument('--npz', '-n', type=str, default='demostrations.npz', help='npz path')
     parser.add_argument('--out_file', '-o', type=str, default='outfile.npz', help='output dataset path')
     parser.add_argument('--test','-t',action='store_true',help='Test generated data')
+    parser.add_argument('--offset',type = int, default=0, help = 'Offset of test data')
     args = parser.parse_args()
 
     video_file = args.video
@@ -82,10 +86,11 @@ if __name__ == '__main__':
     out_file = args.out_file
     num_pair = args.num
     test = args.test
+    offset = args.offset
 
     if test:
         data, label = load_data_from_npz(out_file)
-        visualize_data(data,label,4,10)
+        visualize_data(data,label,4,offset)
         exit(0)
 
     def state_gen_data():
