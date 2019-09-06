@@ -5,7 +5,7 @@ import time
 import random
 import numpy as np
 from numpy.random import choice
-
+import pdb
 
 import torch
 import torch.nn
@@ -49,19 +49,19 @@ class bcolors:
 class DataSet(data.Dataset):
     '''Dataset for load image from npz'''
 
-    def __init__(self, filepath, n, begin=0, transform=None, target_transform=None, arch='target'):
+    def __init__(self, filepath, n, begin=0, transform=None, target_transform=None, arch='target', shuffle = True):
         # initialization
         self.len = n
         self.transform = transform
         self.target_transform = target_transform
         self.begin = begin
         self.arch = arch
-        img1s, img2s, labels = self.read_from_npz(filepath, n)
+        img1s, img2s, labels = self.read_from_npz(filepath, n,shuffle)
         self.labels = labels
         self.img1s = img1s
         self.img2s = img2s
 
-    def read_from_npz(self, filepath, n):
+    def read_from_npz(self, filepath, n, shuffle = True):
         data = np.load(filepath)
         if self.arch == 'target':
             labels = data['labels']
@@ -84,6 +84,12 @@ class DataSet(data.Dataset):
 
 
         assert self.begin + self.len <= imgs.shape[0]
+
+        if shuffle:
+            idx = np.random.permutation(imgs.shape[0])
+            imgs = imgs[idx]
+            labels = labels[idx]
+
         img1s = imgs[self.begin:self.begin + n, 0]
         img2s = imgs[self.begin:self.begin + n, 1]
         labels = labels[self.begin:self.begin + n]
@@ -185,7 +191,7 @@ def main():
     cudnn.benchmark = True
     # data loading code 
     param = {
-        'batch_size': 64,
+        'batch_size': 32,
         'num_workers': 6,
         'shuffle': True,
         'pin_memory': True
@@ -197,7 +203,7 @@ def main():
     train_loader = data.DataLoader(train_set, **param)
 
     param = {
-        'batch_size': 64,
+        'batch_size': 32,
         'num_workers': 6,
         'shuffle': False,
         'pin_memory': True
@@ -206,7 +212,7 @@ def main():
     test_set = DataSet(args.data, 200, begin=800,
                        transform=transforms.Compose([transforms.ToTensor()]),
                        target_transform=transforms.Compose([transforms.ToTensor()]),
-                       arch=args.arch)
+                       arch=args.arch,shuffle=False)
     test_loader = data.DataLoader(test_set, **param)
 
     if args.evaluate:

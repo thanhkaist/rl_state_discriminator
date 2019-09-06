@@ -8,7 +8,7 @@ import pdb
 WIDTH = 128
 HEIGHT = 128
 CHANNEL = 3
-
+DIFF = 5
 
 def test_frame_zero():
     v = imageio.read('demo_video.mp4')
@@ -102,11 +102,11 @@ if __name__ == '__main__':
 
         total = 0
         for i in range(total_eps):
-            assert eps_trace_index[i][1] - 3 >= eps_trace_index[i][0]
-            for idx in np.arange(eps_trace_index[i][0], eps_trace_index[i][1] - 2):
+            assert eps_trace_index[i][1] - DIFF >= eps_trace_index[i][0],'Episode is too short compair with DIFF'
+            for idx in np.arange(eps_trace_index[i][0], eps_trace_index[i][1] - DIFF+1):
                 state1_id_t = idx
                 state2_id_t = idx + 1
-                state2_id_w = np.random.choice(np.arange(idx + 3, eps_trace_index[i][1] + 1))
+                state2_id_w = np.random.choice(np.arange(idx + DIFF, eps_trace_index[i][1] + 1))
 
                 datas[total, 0] = get_frame(v, state1_id_t, (WIDTH, HEIGHT))
                 datas[total, 1] = get_frame(v, state2_id_t, (WIDTH, HEIGHT))
