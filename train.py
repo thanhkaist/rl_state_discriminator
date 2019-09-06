@@ -14,6 +14,8 @@ import torch.backends.cudnn as cudnn
 from model.model import *
 from torch.utils import data
 import torchvision.transforms as transforms
+from tensorboardX import SummaryWriter
+from datetime import datetime
 
 parser = argparse.ArgumentParser(description='PyTorch State Discriminator training scripts')
 parser.add_argument('arch', metavar='ARCH', default='target', type=str, choices=['target', 'neighbor'],
@@ -44,24 +46,46 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+z
+
+class Logger(object):
+    def __init__(self, log_dir, exp_name):
+        self.writter = self.createTensorWriter(log_dir, exp_name)
+
+    def log(self, log_dict, iter):
+        assert isinstance(log_dict, dict), "log_dict must be `dict` type"
+        for key in log_dict.keys():
+            self.writter.add_scalar(key, log_dict[key], iter)
+
+    def createTensorWriter(self, log_dir, exp_name, time_posfix=True):
+        if time_posfix:
+            now = datetime.now()
+            time_prefix = now.strftime("-%y%m%d-%H:%M:%S")
+        else:
+            time_prefix = ""
+        log_folder = os.path.join(log_dir, exp_name + time_prefix)
+        if not os.path.exists(log_folder):
+            os.makedirs(log_folder)
+        writter = SummaryWriter(log_folder)
+        return writter
 
 
 class DataSet(data.Dataset):
     '''Dataset for load image from npz'''
 
-    def __init__(self, filepath, n, begin=0, transform=None, target_transform=None, arch='target', shuffle = True):
+    def __init__(self, filepath, n, begin=0, transform=None, target_transform=None, arch='target', shuffle=True):
         # initialization
         self.len = n
         self.transform = transform
         self.target_transform = target_transform
         self.begin = begin
         self.arch = arch
-        img1s, img2s, labels = self.read_from_npz(filepath, n,shuffle)
+        img1s, img2s, labels = self.read_from_npz(filepath, n, shuffle)
         self.labels = labels
         self.img1s = img1s
         self.img2s = img2s
 
-    def read_from_npz(self, filepath, n, shuffle = True):
+    def read_from_npz(self, filepath, n, shuffle=True):
         data = np.load(filepath)
         if self.arch == 'target':
             labels = data['labels']
@@ -81,7 +105,6 @@ class DataSet(data.Dataset):
                 imgs = data['data']
         else:
             raise Exception("Architecture is not supported")
-
 
         assert self.begin + self.len <= imgs.shape[0]
 
@@ -126,6 +149,9 @@ def test_dataset(filepath, n):
 
     for i, (img1, img2, labels) in enumerate(training_loader):
         print(i, img1.shape, img2.shape, labels.shape)
+
+
+logger = Logger('logs', 'exp1')
 
 
 def main():
@@ -196,7 +222,7 @@ def main():
         'shuffle': True,
         'pin_memory': True
     }
-    train_set = DataSet(args.data, 800,begin = 0,
+    train_set = DataSet(args.data, 800, begin=0,
                         transform=transforms.Compose([transforms.ToTensor()]),
                         target_transform=transforms.Compose([transforms.ToTensor()]),
                         arch=args.arch)
@@ -212,7 +238,7 @@ def main():
     test_set = DataSet(args.data, 200, begin=800,
                        transform=transforms.Compose([transforms.ToTensor()]),
                        target_transform=transforms.Compose([transforms.ToTensor()]),
-                       arch=args.arch,shuffle=False)
+                       arch=args.arch, shuffle=False)
     test_loader = data.DataLoader(test_set, **param)
 
     if args.evaluate:
@@ -242,7 +268,7 @@ def main():
                          }, is_best, args.prefix)
 
 
-def load_model(model,optimizer,check_point_path):
+def load_model(model, optimizer, check_point_path):
     start_epoch = None
     best_prec1 = None
 
@@ -361,6 +387,11 @@ def train(train_loader, model, criterion, optimizer, epoch, echo_freq=1):
 
                   )
 
+    # log data every one epoch
+    loginfo = {'train_loss': losses.avg,
+               'train_acc1': top1.avg}
+    logger.log(loginfo, epoch)
+
 
 def validate(test_loader, model, criterion, epoch, echo_freq=1):
     batch_time = AverageMeter()
@@ -404,6 +435,9 @@ def validate(test_loader, model, criterion, epoch, echo_freq=1):
                       )
         print(
             bcolors.OKGREEN + '***Epoch [{epoch}] Prec@1 {top1.avg:.3f}'.format(epoch=epoch, top1=top1) + bcolors.ENDC)
+    loginfo = {'val_loss': losses.avg,
+               'val_acc1': top1.avg}
+    logger.log(loginfo, epoch)
     return top1.avg
 
 
