@@ -46,7 +46,6 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
-z
 
 class Logger(object):
     def __init__(self, log_dir, exp_name):

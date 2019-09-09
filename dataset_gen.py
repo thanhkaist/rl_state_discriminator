@@ -10,6 +10,12 @@ HEIGHT = 128
 CHANNEL = 3
 DIFF = 5
 
+def unnormalize_img(img):
+    img = img*(255.0/2)
+    img = img + (255.0/2)
+    img = np.uint8(img)
+    return img
+
 def test_frame_zero():
     v = imageio.read('demo_video.mp4')
     # get frame 0
@@ -17,6 +23,15 @@ def test_frame_zero():
     plt.imshow(d);
     plt.show()
 
+def normalize_img(img, crop = False):
+    if crop:
+        img = img[20:-20,20:-20,:]
+    obs = Image.fromarray(img,'RGB')
+    obs = obs.resize((WIDTH,HEIGHT),Image.ANTIALIAS)
+    obs = np.array(obs,dtype=np.float32)
+    obs = obs - 255.0 / 2
+    obs = obs / (255.0 / 2)
+    return obs
 
 # get episode information
 def get_eps_info(file_path):
@@ -31,10 +46,13 @@ def read_video(filepath):
     return v
 
 
-def get_frame(video, frame=0, size=(128, 128)):
+def get_frame(video, frame=0, size=(128, 128),normalize = True):
     img = Image.fromarray(video.get_data(frame))
     re_im = img.resize((size[0], size[1]))
-    im_np = np.array(re_im)
+    im_np = np.array(re_im, dtype=np.float32)
+    if normalize:
+        im_np = im_np - 255.0 / 2
+        im_np = im_np / (255.0 / 2 )
     return im_np
 
 
@@ -62,7 +80,7 @@ def visualize_data(data,label,num =4, offset = 0, zoom = False):
     for i in range(rows*cols):
         j = offset + i // 2
         plt.subplot(rows,cols,i+1,xlabel = str(label[j]))
-        im = Image.fromarray(np.uint8(data[j][i % 2]))
+        im = Image.fromarray(unnormalize_img(data[j][i % 2]),'RGB')
         if zoom:
             im = im.resize((WIDTH*2,HEIGHT*2))
         plt.imshow(im)
@@ -97,13 +115,13 @@ if __name__ == '__main__':
         v = read_video(video_file)
         ep_info, total_eps = get_eps_info(demo_file)
         eps_trace_index = get_trajectory_frame_index(ep_info, total_eps)
-        datas = np.zeros((num_pair, 2, WIDTH, HEIGHT, CHANNEL),dtype=int)  # (:,0) : state (:,1): state/target
+        datas = np.zeros((num_pair, 2, WIDTH, HEIGHT, CHANNEL),dtype=np.float32)  # (:,0) : state (:,1): state/target
         labels = np.zeros((num_pair, 1),dtype = int)
 
         total = 0
         for i in range(total_eps):
-            assert eps_trace_index[i][1] - DIFF >= eps_trace_index[i][0],'Episode is too short compair with DIFF'
-            for idx in np.arange(eps_trace_index[i][0], eps_trace_index[i][1] - DIFF+1):
+            assert eps_trace_index[i][1] - DIFF >= eps_trace_index[i][0], "Episode is too short compair with DIFF"
+            for idx in np.arange(eps_trace_index[i][0], eps_trace_index[i][1] - DIFF + 1):
                 state1_id_t = idx
                 state2_id_t = idx + 1
                 state2_id_w = np.random.choice(np.arange(idx + DIFF, eps_trace_index[i][1] + 1))
